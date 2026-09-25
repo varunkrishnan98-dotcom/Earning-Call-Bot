@@ -1,6 +1,6 @@
 import streamlit as st
 import instructor
-from openai import OpenAI
+import google.generativeai as genai
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import PyPDF2
@@ -11,12 +11,22 @@ st.title("📊 Earnings Call & Investor Presentation Extractor")
 st.markdown("Upload a transcript or presentation (PDF) to automatically extract financial models, catalysts, tone, and macro contexts.")
 
 # --- SECURE CLIENT INITIALIZATION ---
-# Fetches the API key from Streamlit Cloud Secrets (Configured in Step 4)
+# Fetches the API key from Streamlit Cloud Secrets
 try:
-    openai_api_key = st.secrets["OPENAI_API_KEY"]
-    client = instructor.from_openai(OpenAI(api_key=openai_api_key))
+    gemini_api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=gemini_api_key)
+    
+    # Initialize the Gemini model with a system instruction
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction="You are an expert equity research analyst. Extract the requested metrics strictly from the text provided. If a metric is not mentioned, leave it blank. Do not hallucinate."
+    )
+    
+    # Patch the model with Instructor
+    client = instructor.from_gemini(client=model)
+    
 except KeyError:
-    st.error("API Key not found. Please set 'OPENAI_API_KEY' in your Streamlit Secrets.")
+    st.error("API Key not found. Please set 'GEMINI_API_KEY' in your Streamlit Secrets.")
     st.stop()
 
 # --- PYDANTIC SCHEMAS ---
@@ -57,10 +67,8 @@ def extract_text_from_pdf(uploaded_file):
 def analyze_transcript(text_content):
     """Passes text to the LLM and enforces structured JSON output via Instructor."""
     return client.chat.completions.create(
-        model="gpt-4o-mini", # Cost-effective model for extraction
         response_model=QuarterlyEarningsExtraction,
         messages=[
-            {"role": "system", "content": "You are an expert equity research analyst. Extract the requested metrics strictly from the text provided. Do not hallucinate."},
             {"role": "user", "content": f"Extract data from this transcript:\n\n{text_content}"}
         ],
         max_retries=3
