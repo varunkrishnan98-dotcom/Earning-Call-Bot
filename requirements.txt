@@ -1,5 +1,5 @@
 streamlit
-openai
+google-generativeai
 instructor
 pydantic
 PyPDF2
