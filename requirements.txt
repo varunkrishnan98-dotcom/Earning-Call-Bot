@@ -1,0 +1,5 @@
+streamlit==1.32.0
+openai==1.14.2
+instructor==1.1.1
+pydantic==2.6.4
+PyPDF2==3.0.1
