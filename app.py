@@ -14,7 +14,7 @@ st.markdown("Upload a transcript or presentation (PDF) to automatically extract 
 # Fetches the API key from Streamlit Cloud Secrets (Configured in Step 4)
 try:
     openai_api_key = st.secrets["OPENAI_API_KEY"]
-    client = instructor.from_provider(OpenAI(api_key=openai_api_key))
+    client = instructor.from_openai(OpenAI(api_key=openai_api_key))
 except KeyError:
     st.error("API Key not found. Please set 'OPENAI_API_KEY' in your Streamlit Secrets.")
     st.stop()
